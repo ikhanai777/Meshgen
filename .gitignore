@@ -1,0 +1,12 @@
+.gradle/
+build/
+/local.properties
+/.idea/
+*.iml
+.DS_Store
+/captures
+.externalNativeBuild
+.cxx
+# Private release keys must never be committed (the test key in signing/ is intentionally public)
+*.keystore
+release.jks

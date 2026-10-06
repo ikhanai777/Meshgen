@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "name": "Knob",
+  "description": "Grippy knob with a D-shaped shaft hole.",
+  "prompt": "a replacement knob for a 6mm D shaft",
+  "category": "Hardware",
+  "units": "mm",
+  "params": {
+    "diameter": {"value": 30, "min": 12, "max": 80, "step": 1, "unit": "mm", "label": "Diameter"},
+    "height": {"value": 18, "min": 8, "max": 50, "step": 1, "unit": "mm", "label": "Height"},
+    "grips": {"value": 18, "min": 6, "max": 40, "step": 1, "label": "Grip grooves", "integer": true},
+    "shaft": {"value": 6.2, "min": 3, "max": 12, "step": 0.1, "unit": "mm", "label": "Shaft diameter"},
+    "flat": {"value": 4.7, "min": 2, "max": 12, "step": 0.1, "unit": "mm", "label": "Shaft flat (D) width"},
+    "shaft_depth": {"value": 12, "min": 4, "max": 40, "step": 1, "unit": "mm", "label": "Shaft depth"}
+  },
+  "shape": {
+    "type": "subtract",
+    "children": [
+      {"type": "cylinder", "radius": "diameter/2", "height": "height", "round": "min(2, height/2 - 0.5)"},
+      {"type": "radial_array", "count": "grips", "radius": "diameter/2 + 0.6",
+       "child": {"type": "translate", "offset": [0, 0, 2.5],
+                 "child": {"type": "cylinder", "radius": "max(diameter*0.05, 1)", "height": "height"}}},
+      {"type": "translate", "offset": [0, 0, -1], "comment": "D-shaped shaft hole",
+       "child": {"type": "intersect", "children": [
+         {"type": "cylinder", "radius": "shaft/2", "height": "min(shaft_depth, height - 2) + 1"},
+         {"type": "translate", "offset": ["(flat - shaft/2) - shaft/2", 0, 0],
+          "child": {"type": "box", "size": ["shaft", "shaft", "min(shaft_depth, height - 2) + 1"]}}
+       ]}},
+      {"type": "translate", "offset": ["diameter/2 - 4", 0, "height - 1"], "comment": "pointer dimple",
+       "child": {"type": "sphere", "radius": 1.5}}
+    ]
+  }
+}

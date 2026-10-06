@@ -16,6 +16,8 @@ import com.meshgen.app.ui.home.HomeScreen
 import com.meshgen.app.ui.library.LibraryScreen
 import com.meshgen.app.ui.models.ModelsScreen
 import com.meshgen.app.ui.samples.SamplesScreen
+import com.meshgen.app.ui.shape.ShapeEditorScreen
+import com.meshgen.app.ui.shape.ShapeGalleryScreen
 import com.meshgen.app.ui.viewer.ViewerScreen
 import com.meshgen.core.samples.SampleMesh
 
@@ -26,6 +28,9 @@ object Routes {
     const val MODELS = "models"
     const val DEVICE = "device"
     const val SAMPLES = "samples"
+    const val SHAPE_GALLERY = "shape"
+    const val SHAPE_EDITOR = "shape/{template}"
+    fun shapeEditor(template: String) = "shape/$template"
     const val VIEWER = "viewer/{sample}"
     fun viewer(sample: SampleMesh) = "viewer/${sample.name}"
     fun engine(engine: Engine) = "engine/${engine.id}"
@@ -45,7 +50,7 @@ fun MeshGenNavHost() {
     ) {
         composable(Routes.HOME) {
             HomeScreen(
-                onOpenEngine = { nav.navigate(Routes.engine(it)) },
+                onOpenEngine = { nav.navigate(if (it == Engine.TEXT_TO_SHAPE) Routes.SHAPE_GALLERY else Routes.engine(it)) },
                 onOpenLibrary = { nav.navigate(Routes.LIBRARY) },
                 onOpenModels = { nav.navigate(Routes.MODELS) },
                 onOpenDevice = { nav.navigate(Routes.DEVICE) },
@@ -61,5 +66,7 @@ fun MeshGenNavHost() {
         composable(Routes.DEVICE) { DeviceScreen(onBack = back) }
         composable(Routes.SAMPLES) { SamplesScreen(onOpen = { nav.navigate(Routes.viewer(it)) }, onBack = back) }
         composable(Routes.VIEWER) { ViewerScreen(onBack = back) }
+        composable(Routes.SHAPE_GALLERY) { ShapeGalleryScreen(onOpen = { nav.navigate(Routes.shapeEditor(it)) }, onBack = back) }
+        composable(Routes.SHAPE_EDITOR) { ShapeEditorScreen(onBack = back) }
     }
 }

@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "name": "Planter",
+  "description": "Tapered round pot with a rolled rim and a drainage hole.",
+  "prompt": "a round planter, 12 cm across the top, with a drainage hole",
+  "category": "Garden",
+  "units": "mm",
+  "params": {
+    "top_diameter": {"value": 120, "min": 50, "max": 250, "step": 1, "unit": "mm", "label": "Top diameter"},
+    "bottom_diameter": {"value": 90, "min": 40, "max": 250, "step": 1, "unit": "mm", "label": "Bottom diameter"},
+    "height": {"value": 110, "min": 30, "max": 250, "step": 1, "unit": "mm", "label": "Height"},
+    "wall": {"value": 2.4, "min": 1.2, "max": 6, "step": 0.2, "unit": "mm", "label": "Wall thickness"},
+    "drain_hole": {"value": 12, "min": 4, "max": 30, "step": 1, "unit": "mm", "label": "Drainage hole"}
+  },
+  "shape": {
+    "type": "subtract",
+    "children": [
+      {
+        "type": "union",
+        "children": [
+          {"type": "shell", "thickness": "wall", "open_top": true,
+           "child": {"type": "cone", "radius_bottom": "bottom_diameter/2", "radius_top": "top_diameter/2", "height": "height"}},
+          {"type": "translate", "offset": [0, 0, "height - 2*wall"],
+           "comment": "rolled rim",
+           "child": {"type": "torus", "major_radius": "top_diameter/2 - wall/2", "minor_radius": "wall"}}
+        ]
+      },
+      {"type": "translate", "offset": [0, 0, -1],
+       "child": {"type": "cylinder", "radius": "drain_hole/2", "height": "wall + 2"}}
+    ]
+  }
+}

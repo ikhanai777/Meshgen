@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "name": "Soap dish",
+  "description": "Draining soap dish with raised ribs and slots.",
+  "prompt": "a soap dish with drainage",
+  "category": "Kitchen",
+  "units": "mm",
+  "params": {
+    "length": {"value": 110, "min": 60, "max": 180, "step": 1, "unit": "mm", "label": "Length"},
+    "width": {"value": 75, "min": 40, "max": 140, "step": 1, "unit": "mm", "label": "Width"},
+    "height": {"value": 14, "min": 8, "max": 40, "step": 1, "unit": "mm", "label": "Height"},
+    "ribs": {"value": 7, "min": 2, "max": 16, "step": 1, "label": "Ribs", "integer": true}
+  },
+  "shape": {
+    "type": "union",
+    "children": [
+      {"type": "subtract", "children": [
+        {"type": "box", "size": ["length", "width", "height"], "round": "min(4, height/2 - 0.5)"},
+        {"type": "translate", "offset": [0, 0, 3],
+         "child": {"type": "box", "size": ["length - 6", "width - 6", "height"], "round": 2}},
+        {"type": "linear_array", "count": "ribs - 1", "spacing": ["(length - 12)/ribs", 0, 0],
+         "comment": "drain slots between the ribs",
+         "child": {"type": "translate", "offset": ["-(length - 12)/2 + (length - 12)/ribs", 0, -1],
+                   "child": {"type": "box", "size": [3, "width - 20", 6], "round": 1}}}
+      ]},
+      {"type": "linear_array", "count": "ribs", "spacing": ["(length - 12)/ribs", 0, 0],
+       "child": {"type": "translate", "offset": ["-(length - 12)/2 + (length - 12)/ribs/2", 0, 2],
+                 "child": {"type": "box", "size": [3, "width - 10", 7], "round": 1.2}}}
+    ]
+  }
+}

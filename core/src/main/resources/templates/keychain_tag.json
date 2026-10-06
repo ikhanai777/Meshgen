@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "name": "Keychain tag",
+  "description": "Rounded tag with a ring hole and a raised border.",
+  "prompt": "a keychain tag",
+  "category": "Accessories",
+  "units": "mm",
+  "params": {
+    "length": {"value": 50, "min": 25, "max": 100, "step": 1, "unit": "mm", "label": "Length"},
+    "width": {"value": 25, "min": 12, "max": 60, "step": 1, "unit": "mm", "label": "Width"},
+    "thickness": {"value": 3, "min": 1.6, "max": 8, "step": 0.2, "unit": "mm", "label": "Thickness"},
+    "hole": {"value": 5, "min": 2, "max": 12, "step": 0.5, "unit": "mm", "label": "Ring hole"}
+  },
+  "shape": {
+    "type": "subtract",
+    "children": [
+      {"type": "union", "children": [
+        {"type": "box", "size": ["length", "width", "thickness"], "round": "min(1.2, thickness/2 - 0.2)"},
+        {"type": "subtract", "comment": "raised border", "children": [
+          {"type": "box", "size": ["length", "width", "thickness + 1"], "round": "min(1.2, thickness/2 - 0.2)"},
+          {"type": "translate", "offset": [0, 0, 1],
+           "child": {"type": "box", "size": ["length - 4", "width - 4", "thickness + 2"]}}
+        ]}
+      ]},
+      {"type": "translate", "offset": ["-length/2 + hole/2 + 3", 0, -1],
+       "child": {"type": "cylinder", "radius": "hole/2", "height": "thickness + 4"}}
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "name": "Drawer pull",
+  "description": "Bar handle on two posts with screw holes underneath.",
+  "prompt": "a drawer handle with 96mm hole spacing",
+  "category": "Hardware",
+  "units": "mm",
+  "params": {
+    "spacing": {"value": 96, "min": 32, "max": 224, "step": 1, "unit": "mm", "label": "Hole spacing"},
+    "bar": {"value": 10, "min": 6, "max": 20, "step": 0.5, "unit": "mm", "label": "Bar thickness"},
+    "clearance": {"value": 25, "min": 12, "max": 45, "step": 1, "unit": "mm", "label": "Finger clearance"},
+    "screw": {"value": 3.4, "min": 2.5, "max": 6, "step": 0.1, "unit": "mm", "label": "Screw hole"}
+  },
+  "shape": {
+    "type": "subtract",
+    "children": [
+      {"type": "smooth_union", "radius": 3, "children": [
+        {"type": "translate", "offset": ["-(spacing + 2*bar)/2", 0, "clearance + bar/2"],
+         "child": {"type": "rotate", "angles": [0, 90, 0],
+                   "child": {"type": "capsule", "radius": "bar/2", "height": "spacing + 2*bar"}}},
+        {"type": "linear_array", "count": 2, "spacing": ["spacing", 0, 0],
+         "child": {"type": "translate", "offset": ["-spacing/2", 0, 0],
+                   "child": {"type": "cylinder", "radius": "bar*0.6", "height": "clearance + bar/2"}}}
+      ]},
+      {"type": "linear_array", "count": 2, "spacing": ["spacing", 0, 0],
+       "child": {"type": "translate", "offset": ["-spacing/2", 0, -1],
+                 "child": {"type": "cylinder", "radius": "screw/2", "height": 13}}}
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "name": "Tealight holder",
+  "description": "Fluted holder with a pocket sized for a standard tealight.",
+  "prompt": "a tealight candle holder",
+  "category": "Home",
+  "units": "mm",
+  "params": {
+    "diameter": {"value": 70, "min": 45, "max": 140, "step": 1, "unit": "mm", "label": "Diameter"},
+    "height": {"value": 30, "min": 18, "max": 100, "step": 1, "unit": "mm", "label": "Height"},
+    "flutes": {"value": 16, "min": 6, "max": 40, "step": 1, "label": "Flutes", "integer": true},
+    "pocket": {"value": 40, "min": 30, "max": 60, "step": 0.5, "unit": "mm", "label": "Pocket diameter"}
+  },
+  "shape": {
+    "type": "subtract",
+    "children": [
+      {"type": "cylinder", "radius": "diameter/2", "height": "height", "round": 2},
+      {"type": "translate", "offset": [0, 0, "height - 16"],
+       "child": {"type": "cylinder", "radius": "min(pocket, diameter - 6)/2", "height": 20}},
+      {"type": "radial_array", "count": "flutes", "radius": "diameter/2 + 1",
+       "child": {"type": "translate", "offset": [0, 0, 3],
+                 "child": {"type": "capsule", "radius": "max(diameter*0.04, 1.5)", "height": "height"}}}
+    ]
+  }
+}

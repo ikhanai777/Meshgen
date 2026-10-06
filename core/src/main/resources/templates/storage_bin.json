@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "name": "Stackable bin",
+  "description": "Slightly flared open bin with rounded corners.",
+  "prompt": "a storage bin 15 by 10 cm and 8 cm tall",
+  "category": "Storage",
+  "units": "mm",
+  "params": {
+    "length": {"value": 150, "min": 50, "max": 250, "step": 1, "unit": "mm", "label": "Length"},
+    "width": {"value": 100, "min": 40, "max": 250, "step": 1, "unit": "mm", "label": "Width"},
+    "height": {"value": 80, "min": 20, "max": 200, "step": 1, "unit": "mm", "label": "Height"},
+    "flare": {"value": 1.06, "min": 1, "max": 1.2, "step": 0.01, "label": "Top flare"},
+    "corner": {"value": 8, "min": 1, "max": 20, "step": 0.5, "unit": "mm", "label": "Corner radius"},
+    "wall": {"value": 2, "min": 1.2, "max": 5, "step": 0.2, "unit": "mm", "label": "Wall thickness"}
+  },
+  "shape": {
+    "type": "shell", "thickness": "wall", "open_top": true,
+    "child": {"type": "translate", "offset": [0, 0, "corner"],
+      "comment": "offset rounds the corners and grows the size by 'corner' on every side",
+      "child": {"type": "offset", "distance": "corner",
+        "child": {"type": "extrude", "height": "height - 2*corner", "taper": "flare",
+          "points": [["-(length/2 - corner)", "-(width/2 - corner)"], ["length/2 - corner", "-(width/2 - corner)"],
+                     ["length/2 - corner", "width/2 - corner"], ["-(length/2 - corner)", "width/2 - corner"]]}}}
+  }
+}

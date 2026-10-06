@@ -8,7 +8,9 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -102,36 +104,58 @@ class ViewerActions(
 
 @Composable
 fun ViewerScreen(onBack: () -> Unit, vm: ViewerViewModel = viewModel()) {
-    val state by vm.state.collectAsStateWithLifecycle()
+    val wb = vm.workbench
+    val state by wb.state.collectAsStateWithLifecycle()
+    val snackbar = rememberViewerEvents(wb)
+    val actions = remember(wb) { wb.actions(onBack) }
+    ViewerContent(state, actions, snackbar) { MeshViewport(state, onError = wb::onRenderError) }
+}
+
+/** Collects share/message events from [wb] and returns the snackbar host state that shows messages. */
+@Composable
+fun rememberViewerEvents(wb: MeshWorkbench): SnackbarHostState {
     val context = LocalContext.current
     val snackbar = remember { SnackbarHostState() }
-
-    LaunchedEffect(Unit) {
-        vm.events.collect { e ->
+    LaunchedEffect(wb) {
+        wb.events.collect { e ->
             when (e) {
                 is ViewerEvent.Share -> context.startActivity(e.intent)
                 is ViewerEvent.Message -> snackbar.showSnackbar(e.text)
             }
         }
     }
-
-    val actions = remember(vm) {
-        ViewerActions(
-            onBack = onBack, onWireframe = vm::setWireframe, onLighting = vm::setLighting, onResetView = vm::resetView,
-            onFormat = vm::setFormat, onFraction = vm::setDecimateFraction, onDecimate = vm::decimate,
-            onRestore = vm::restoreOriginal, onShare = vm::share, onSave = vm::saveToDownloads,
-        )
-    }
-    ViewerContent(state, actions, snackbar) { Viewport(state, onError = vm::onRenderError) }
+    return snackbar
 }
 
 /** Stateless layout, so it can be previewed and screenshot-tested without OpenGL. */
 @Composable
 fun ViewerContent(
-    state: ViewerUiState,
+    state: MeshPanelState,
     actions: ViewerActions,
     snackbar: SnackbarHostState,
     viewport: @Composable () -> Unit,
+) {
+    ViewerFrame(state, actions, snackbar, viewport) {
+        state.report?.let { report ->
+            StatsStrip(report)
+            HealthRow(report, state.fixes)
+            SimplifyCard(state, actions)
+        }
+    }
+}
+
+/**
+ * Shared screen frame: 3D viewport on top (half the screen), a scrolling panel with [panel] below it,
+ * and the export bar pinned at the bottom.
+ */
+@Composable
+fun ViewerFrame(
+    state: MeshPanelState,
+    actions: ViewerActions,
+    snackbar: SnackbarHostState,
+    viewport: @Composable () -> Unit,
+    viewportOverlay: @Composable BoxScope.() -> Unit = {},
+    panel: @Composable ColumnScope.() -> Unit,
 ) {
     Box(Modifier.fillMaxSize().background(MeshColors.Graphite950)) {
         BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
@@ -148,6 +172,7 @@ fun ViewerContent(
                             Text(it, Modifier.padding(16.dp), color = MeshColors.Warning, style = MaterialTheme.typography.bodyMedium)
                         }
                     }
+                    viewportOverlay()
                 }
 
                 Column(
@@ -157,13 +182,8 @@ fun ViewerContent(
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    state.report?.let { report ->
-                        StatsStrip(report)
-                        HealthRow(report, state.fixes)
-                        SimplifyCard(state, actions)
-                    }
-                }
+                    content = panel,
+                )
 
                 ExportBar(state, actions)
             }
@@ -173,7 +193,7 @@ fun ViewerContent(
 }
 
 @Composable
-private fun Viewport(state: ViewerUiState, onError: (String) -> Unit) {
+fun MeshViewport(state: MeshPanelState, onError: (String) -> Unit) {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     var view by remember { mutableStateOf<MeshView?>(null) }
     DisposableEffect(lifecycle, view) {
@@ -235,7 +255,7 @@ private fun ViewportHint(modifier: Modifier) {
 }
 
 @Composable
-private fun ViewportControls(state: ViewerUiState, actions: ViewerActions, modifier: Modifier) {
+private fun ViewportControls(state: MeshPanelState, actions: ViewerActions, modifier: Modifier) {
     Row(
         modifier.background(overlay, RoundedCornerShape(50)).padding(3.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -275,7 +295,7 @@ private fun mm(v: Float): String {
 }
 
 @Composable
-private fun StatsStrip(r: MeshReport) {
+internal fun StatsStrip(r: MeshReport) {
     Surface(shape = RoundedCornerShape(14.dp), color = MeshColors.Graphite900, border = BorderStroke(1.dp, MeshColors.Graphite800)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Stat("SIZE MM", "${mm(r.bounds.sizeX)}×${mm(r.bounds.sizeY)}×${mm(r.bounds.sizeZ)}", Modifier.weight(1.5f))
@@ -300,7 +320,7 @@ private fun Stat(label: String, value: String, modifier: Modifier) {
 }
 
 @Composable
-private fun HealthRow(r: MeshReport, fixes: List<String>) {
+internal fun HealthRow(r: MeshReport, fixes: List<String>) {
     var expanded by remember { mutableStateOf(false) }
     val problems = r.problems
     val ok = problems.isEmpty()
@@ -346,7 +366,7 @@ private fun HealthRow(r: MeshReport, fixes: List<String>) {
 }
 
 @Composable
-private fun SimplifyCard(state: ViewerUiState, actions: ViewerActions) {
+internal fun SimplifyCard(state: MeshPanelState, actions: ViewerActions) {
     Surface(shape = RoundedCornerShape(14.dp), color = MeshColors.Graphite900, border = BorderStroke(1.dp, MeshColors.Graphite800)) {
         Column(Modifier.fillMaxWidth().padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 2.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -386,7 +406,7 @@ private fun SimplifyCard(state: ViewerUiState, actions: ViewerActions) {
 }
 
 @Composable
-private fun ExportBar(state: ViewerUiState, actions: ViewerActions) {
+internal fun ExportBar(state: MeshPanelState, actions: ViewerActions) {
     val enabled = state.report != null && state.busyLabel == null
     Surface(color = MeshColors.Graphite900, border = BorderStroke(1.dp, MeshColors.Graphite800)) {
         Column {

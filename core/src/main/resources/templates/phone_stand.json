@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "name": "Phone stand",
+  "description": "Angled desk stand with a front lip and a charging-cable slot.",
+  "prompt": "a phone stand for my desk with a slot for the charging cable",
+  "category": "Desk",
+  "units": "mm",
+  "params": {
+    "width": {"value": 70, "min": 50, "max": 120, "step": 1, "unit": "mm", "label": "Width"},
+    "depth": {"value": 85, "min": 60, "max": 140, "step": 1, "unit": "mm", "label": "Base depth"},
+    "angle": {"value": 65, "min": 45, "max": 80, "step": 1, "unit": "°", "label": "Lean angle"},
+    "back_length": {"value": 95, "min": 50, "max": 160, "step": 1, "unit": "mm", "label": "Backrest length"},
+    "thickness": {"value": 6, "min": 3, "max": 12, "step": 0.5, "unit": "mm", "label": "Thickness"},
+    "ledge": {"value": 14, "min": 8, "max": 30, "step": 1, "unit": "mm", "label": "Phone thickness slot"}
+  },
+  "shape": {
+    "type": "subtract",
+    "children": [
+      {"type": "intersect", "children": [
+        {"type": "smooth_union", "radius": 3, "children": [
+          {"type": "box", "size": ["width", "depth", "thickness"], "comment": "base"},
+          {"type": "translate", "offset": [0, "-depth/2 + thickness/2 + ledge + thickness", 0],
+           "child": {"type": "rotate", "angles": ["-(90 - angle)", 0, 0],
+                     "child": {"type": "box", "size": ["width", "thickness", "back_length"], "comment": "backrest"}}},
+          {"type": "translate", "offset": [0, "-depth/2 + thickness/2", 0],
+           "child": {"type": "box", "size": ["width", "thickness", "thickness + 10"], "comment": "front lip"}}
+        ]},
+        {"type": "box", "size": ["width", "depth * 3", 400], "comment": "trim anything below the bed and the fillet side bulge"}
+      ]},
+      {"type": "translate", "offset": [0, "-depth/2", -1],
+       "child": {"type": "box", "size": [14, "2*thickness + 2*ledge", 40], "comment": "cable slot"}}
+    ]
+  }
+}

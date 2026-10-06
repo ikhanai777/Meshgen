@@ -26,7 +26,7 @@ enum class Engine(
             "which becomes a watertight, editable mesh built for 3D printing. Every size is a slider you can tweak.",
         badge = "CORE",
         experimental = false,
-        plannedPhase = 2,
+        plannedPhase = 3,
         icon = Icons.Outlined.TextFields,
     ),
     PHOTO_TO_3D(

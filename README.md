@@ -5,7 +5,7 @@ On-device 3D mesh generator for Android. No cloud APIs — all AI runs on the ph
 | Engine | What it does | Status |
 |---|---|---|
 | — Viewer + export | Orbit/zoom/pan viewer, mesh health check, simplify, STL / 3MF / OBJ / GLB export | Done (Phase 1) |
-| 01 Text → Shape | Local LLM writes a constrained shape recipe (JSON DSL) → watertight, editable, printable mesh | Planned (Phases 2–3) |
+| 01 Text → Shape | Local LLM writes a constrained shape recipe (JSON DSL) → watertight, editable, printable mesh | Templates + sliders done (Phase 2); AI prompts in Phase 3 |
 | 02 Photo → 3D | Background removal + TripoSR single-image reconstruction | Planned (Phase 4), experimental |
 | 03 Camera Capture | ARCore depth + TSDF fusion + marching cubes | Planned (Phase 5), experimental |
 
@@ -47,7 +47,8 @@ The workflow picks it up automatically. Note: switching keys means uninstalling 
 
 ```
 .github/workflows/android.yml   CI: tests, APKs, releases
-core/                           Pure Kotlin (no Android): mesh, cleanup, decimation, exporters, samples
+core/                           Pure Kotlin (no Android): mesh, cleanup, decimation, exporters, samples,
+                                shape recipe language (dsl/), SDF + marching cubes (sdf/), templates (resources/templates/)
   src/test/                     Fast JVM unit tests
 app/                            Android app (Kotlin, Jetpack Compose, single activity, MVVM)
   src/main/java/com/meshgen/app/
@@ -61,11 +62,13 @@ app/                            Android app (Kotlin, Jetpack Compose, single act
   src/main/assets/shaders/      GLSL ES 3.0 shaders
   src/test/                     JVM unit tests
 tools/render_preview.py         Desktop render of the viewer shaders
+tools/render_thumbnails.py      Regenerates template thumbnails (app/src/main/assets/thumbnails)
+docs/SHAPE_DSL.md               Shape recipe reference
 signing/                        Public test signing key (testing only)
 gradle/libs.versions.toml       Dependency versions
 ```
 
-Planned additions: SDF, shape DSL and marching cubes go into `:core`; modules per engine for native/ML dependencies.
+Planned additions: modules per engine for native/ML dependencies (LLM, image-to-3D, capture).
 
 ## Building locally (optional)
 

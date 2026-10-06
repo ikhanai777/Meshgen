@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "name": "Desk cable holder",
+  "description": "Block with snap-in channels that keep charging cables at the desk edge.",
+  "prompt": "a cable organizer for 5 cables",
+  "category": "Desk",
+  "units": "mm",
+  "params": {
+    "cables": {"value": 5, "min": 1, "max": 12, "step": 1, "label": "Cables", "integer": true},
+    "cable": {"value": 5, "min": 2.5, "max": 12, "step": 0.5, "unit": "mm", "label": "Cable diameter"},
+    "pitch": {"value": 14, "min": 8, "max": 30, "step": 1, "unit": "mm", "label": "Spacing"},
+    "depth": {"value": 22, "min": 10, "max": 50, "step": 1, "unit": "mm", "label": "Depth"},
+    "height": {"value": 18, "min": 10, "max": 40, "step": 1, "unit": "mm", "label": "Height"}
+  },
+  "shape": {
+    "type": "subtract",
+    "children": [
+      {"type": "box", "size": ["cables*pitch + 6", "depth", "height"], "round": 3},
+      {"type": "linear_array", "count": "cables", "spacing": ["pitch", 0, 0],
+       "child": {"type": "translate", "offset": ["-(cables - 1)*pitch/2", 0, "height*0.55"],
+                 "child": {"type": "union", "children": [
+                   {"type": "rotate", "angles": [90, 0, 0],
+                    "child": {"type": "translate", "offset": [0, 0, "-depth"],
+                              "child": {"type": "cylinder", "radius": "cable/2 + 0.3", "height": "2*depth"}}},
+                   {"type": "box", "size": ["cable*0.75", "2*depth", "height"], "comment": "snap-in slot"}
+                 ]}}}
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "name": "Coaster",
+  "description": "Round coaster with a raised rim and radial drain grooves.",
+  "prompt": "a round drink coaster with a rim",
+  "category": "Kitchen",
+  "units": "mm",
+  "params": {
+    "diameter": {"value": 95, "min": 60, "max": 140, "step": 1, "unit": "mm", "label": "Diameter"},
+    "thickness": {"value": 5, "min": 3, "max": 10, "step": 0.5, "unit": "mm", "label": "Thickness"},
+    "rim": {"value": 4, "min": 2, "max": 10, "step": 0.5, "unit": "mm", "label": "Rim width"},
+    "grooves": {"value": 12, "min": 4, "max": 36, "step": 1, "label": "Grooves", "integer": true}
+  },
+  "shape": {
+    "type": "subtract",
+    "children": [
+      {"type": "cylinder", "radius": "diameter/2", "height": "thickness", "round": 1.2},
+      {"type": "translate", "offset": [0, 0, "thickness - 1.5"],
+       "child": {"type": "cylinder", "radius": "diameter/2 - rim", "height": 5}},
+      {"type": "radial_array", "count": "grooves",
+       "child": {"type": "translate", "offset": ["diameter/4 - rim/2", 0, "thickness - 2.3"],
+                 "child": {"type": "box", "size": ["diameter/2 - rim - 4", 1.6, 3]}}}
+    ]
+  }
+}

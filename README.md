@@ -4,9 +4,13 @@ On-device 3D mesh generator for Android. No cloud APIs — all AI runs on the ph
 
 | Engine | What it does | Status |
 |---|---|---|
+| — Viewer + export | Orbit/zoom/pan viewer, mesh health check, simplify, STL / 3MF / OBJ / GLB export | Done (Phase 1) |
 | 01 Text → Shape | Local LLM writes a constrained shape recipe (JSON DSL) → watertight, editable, printable mesh | Planned (Phases 2–3) |
 | 02 Photo → 3D | Background removal + TripoSR single-image reconstruction | Planned (Phase 4), experimental |
 | 03 Camera Capture | ARCore depth + TSDF fusion + marching cubes | Planned (Phase 5), experimental |
+
+![Viewer preview](docs/viewer-preview.png)
+<sub>Desktop render of the in-app viewer's shaders (`tools/render_preview.py`).</sub>
 
 See [PROGRESS.md](PROGRESS.md) for current state and [MODELS.md](MODELS.md) for AI model licenses.
 
@@ -43,20 +47,26 @@ The workflow picks it up automatically. Note: switching keys means uninstalling 
 
 ```
 .github/workflows/android.yml   CI: tests, APKs, releases
+core/                           Pure Kotlin (no Android): mesh, cleanup, decimation, exporters, samples
+  src/test/                     Fast JVM unit tests
 app/                            Android app (Kotlin, Jetpack Compose, single activity, MVVM)
   src/main/java/com/meshgen/app/
     MainActivity.kt
     device/                     RAM / SoC / GPU detection, device tier
+    viewer/                     OpenGL ES 3 mesh viewer (renderer, orbit camera, touch)
+    files/                      Share sheet + save to Downloads
     ui/theme/                   Graphite + cyan design system
     ui/navigation/              Compose navigation graph
-    ui/home/  ui/engine/  ui/library/  ui/models/
+    ui/home/  ui/engine/  ui/viewer/  ui/samples/  ui/library/  ui/models/
+  src/main/assets/shaders/      GLSL ES 3.0 shaders
   src/test/                     JVM unit tests
+tools/render_preview.py         Desktop render of the viewer shaders
 signing/                        Public test signing key (testing only)
 gradle/libs.versions.toml       Dependency versions
 ```
 
-Planned additions (as phases land): a pure-Kotlin `:core` module for mesh, SDF, DSL, marching cubes and exporters (fast JVM tests), plus modules per engine for native/ML dependencies.
+Planned additions: SDF, shape DSL and marching cubes go into `:core`; modules per engine for native/ML dependencies.
 
 ## Building locally (optional)
 
-Requires JDK 17+ and the Android SDK: `./gradlew testDebugUnitTest assembleDebug assembleRelease`.
+Requires JDK 17+ and the Android SDK: `./gradlew :core:test :app:testDebugUnitTest assembleDebug assembleRelease`.

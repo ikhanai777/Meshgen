@@ -10,3 +10,4 @@ build/
 # Private release keys must never be committed (the test key in signing/ is intentionally public)
 *.keystore
 release.jks
+.kotlin/

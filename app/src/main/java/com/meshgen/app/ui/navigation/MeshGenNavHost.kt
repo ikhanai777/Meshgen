@@ -15,6 +15,9 @@ import com.meshgen.app.ui.home.DeviceScreen
 import com.meshgen.app.ui.home.HomeScreen
 import com.meshgen.app.ui.library.LibraryScreen
 import com.meshgen.app.ui.models.ModelsScreen
+import com.meshgen.app.ui.samples.SamplesScreen
+import com.meshgen.app.ui.viewer.ViewerScreen
+import com.meshgen.core.samples.SampleMesh
 
 object Routes {
     const val HOME = "home"
@@ -22,6 +25,9 @@ object Routes {
     const val LIBRARY = "library"
     const val MODELS = "models"
     const val DEVICE = "device"
+    const val SAMPLES = "samples"
+    const val VIEWER = "viewer/{sample}"
+    fun viewer(sample: SampleMesh) = "viewer/${sample.name}"
     fun engine(engine: Engine) = "engine/${engine.id}"
 }
 
@@ -43,6 +49,7 @@ fun MeshGenNavHost() {
                 onOpenLibrary = { nav.navigate(Routes.LIBRARY) },
                 onOpenModels = { nav.navigate(Routes.MODELS) },
                 onOpenDevice = { nav.navigate(Routes.DEVICE) },
+                onOpenSamples = { nav.navigate(Routes.SAMPLES) },
             )
         }
         composable(Routes.ENGINE) { entry ->
@@ -52,5 +59,7 @@ fun MeshGenNavHost() {
         composable(Routes.LIBRARY) { LibraryScreen(onBack = back) }
         composable(Routes.MODELS) { ModelsScreen(onBack = back) }
         composable(Routes.DEVICE) { DeviceScreen(onBack = back) }
+        composable(Routes.SAMPLES) { SamplesScreen(onOpen = { nav.navigate(Routes.viewer(it)) }, onBack = back) }
+        composable(Routes.VIEWER) { ViewerScreen(onBack = back) }
     }
 }

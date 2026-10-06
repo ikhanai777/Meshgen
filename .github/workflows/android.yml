@@ -44,7 +44,7 @@ jobs:
           fi
 
       - name: Unit tests
-        run: ./gradlew testDebugUnitTest
+        run: ./gradlew :core:test :app:testDebugUnitTest
 
       - name: Build debug and release APKs
         env:
@@ -70,7 +70,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
-          path: app/build/reports/tests/
+          path: |
+            app/build/reports/tests/
+            core/build/reports/tests/
 
       # main → a permanent numbered release, marked "Latest".
       - name: Publish release (main)

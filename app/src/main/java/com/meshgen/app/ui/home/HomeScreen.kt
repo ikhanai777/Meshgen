@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.ViewInAr
 import androidx.compose.material3.Icon
@@ -56,6 +57,7 @@ fun HomeScreen(
     onOpenLibrary: () -> Unit,
     onOpenModels: () -> Unit,
     onOpenDevice: () -> Unit,
+    onOpenSamples: () -> Unit,
     vm: HomeViewModel = viewModel(),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -115,9 +117,12 @@ fun HomeScreen(
 
         Spacer(Modifier.height(8.dp))
         AnimatedEntry(delayMs = 280) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                QuickTile("Library", "Past generations", Icons.Outlined.ViewInAr, onOpenLibrary, Modifier.weight(1f))
-                QuickTile("Models", "Downloads & storage", Icons.Outlined.CloudDownload, onOpenModels, Modifier.weight(1f))
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                QuickTile("Sample meshes", "Try the 3D viewer, mesh checks and STL / 3MF / OBJ / GLB export", Icons.Outlined.Category, onOpenSamples, Modifier.fillMaxWidth())
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    QuickTile("Library", "Past generations", Icons.Outlined.ViewInAr, onOpenLibrary, Modifier.weight(1f))
+                    QuickTile("Models", "Downloads & storage", Icons.Outlined.CloudDownload, onOpenModels, Modifier.weight(1f))
+                }
             }
         }
         Spacer(Modifier.height(32.dp))

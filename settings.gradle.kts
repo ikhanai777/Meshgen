@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "MeshGen"
 include(":app")
+include(":core")

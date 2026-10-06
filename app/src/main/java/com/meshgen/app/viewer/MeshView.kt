@@ -48,6 +48,13 @@ class MeshView(context: Context, onError: (String) -> Unit) : GLSurfaceView(cont
 
     fun resetView() { camera.reset(); requestRender() }
 
+    private var lastResetCount = 0
+
+    /** Resets the camera when [count] increases (driven by UI state). */
+    fun resetViewIfRequested(count: Int) {
+        if (count != lastResetCount) { lastResetCount = count; resetView() }
+    }
+
     // --- Touch ---------------------------------------------------------------------------
 
     private var lastX = 0f

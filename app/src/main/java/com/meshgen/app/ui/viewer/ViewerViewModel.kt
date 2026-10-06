@@ -43,6 +43,7 @@ data class ViewerUiState(
     val wireframe: Boolean = false,
     val lighting: LightingPreset = LightingPreset.STUDIO,
     val format: ExportFormat = ExportFormat.STL,
+    val resetViewCount: Int = 0,
     val error: String? = null,
 )
 
@@ -89,6 +90,7 @@ class ViewerViewModel(app: Application, handle: SavedStateHandle) : AndroidViewM
     fun setWireframe(on: Boolean) = _state.update { it.copy(wireframe = on) }
     fun setLighting(p: LightingPreset) = _state.update { it.copy(lighting = p) }
     fun setFormat(f: ExportFormat) = _state.update { it.copy(format = f) }
+    fun resetView() = _state.update { it.copy(resetViewCount = it.resetViewCount + 1) }
     fun setDecimateFraction(f: Float) = _state.update { it.copy(decimateFraction = f) }
     fun onRenderError(message: String) = _state.update { it.copy(error = message) }
 

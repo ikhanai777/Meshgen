@@ -39,6 +39,12 @@
 - Home → "Sample meshes" gallery → viewer.
 - Shaders validated with `glslangValidator`; `tools/render_preview.py` renders the app's shaders on desktop (docs/viewer-preview.png).
 
+### Phase 1 follow-up (on-phone feedback)
+- Viewer now takes 50% of the screen: title/back button overlay the 3D view, stats in one slim row, health check collapses to one
+  tappable line, simplify is a compact card, export is one row (format menu + Save + Share). Lighting is one button that cycles presets;
+  added a Reset view button. Checked at 1.3× font scale with a Paparazzi layout render (local only, not in CI).
+- Fixed: screen titles and back arrows were black on black on sub-screens (default text colour now light app-wide).
+
 ## In progress
 - Nothing. Waiting for go-ahead on Phase 2.
 

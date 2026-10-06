@@ -5,6 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.toArgb
 import com.meshgen.app.ui.navigation.MeshGenNavHost
 import com.meshgen.app.ui.theme.MeshColors
@@ -16,7 +18,12 @@ class MainActivity : ComponentActivity() {
         val bars = SystemBarStyle.dark(MeshColors.Graphite950.copy(alpha = 0f).toArgb())
         enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
         setContent {
-            MeshGenTheme { MeshGenNavHost() }
+            MeshGenTheme {
+                // Surface sets the default text/icon colour for every screen (light on graphite).
+                Surface(color = MaterialTheme.colorScheme.background, contentColor = MaterialTheme.colorScheme.onBackground) {
+                    MeshGenNavHost()
+                }
+            }
         }
     }
 }

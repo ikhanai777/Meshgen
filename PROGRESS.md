@@ -6,8 +6,8 @@
 |---|---|---|
 | 0 | Skeleton, Compose navigation, GitHub Actions APK build | Done |
 | 1 | 3D viewer, mesh pipeline, exporters | Done (tested on phone) |
-| 2 | Engine 1 without LLM (DSL, templates, sliders, SDF → mesh) | **Done — awaiting on-phone test** |
-| 3 | Engine 1 with local LLM | Not started |
+| 2 | Engine 1 without LLM (DSL, templates, sliders, SDF → mesh) | Done |
+| 3 | Engine 1 with local LLM | **Done — awaiting on-phone test** |
 | 4 | Engine 2 (photo → 3D) | Not started |
 | 5 | Engine 3 (camera capture) | Not started |
 | 6 | Polish | Not started |
@@ -63,8 +63,30 @@
 - Verified in the build environment: **PrusaSlicer reports all 18 templates manifold and slices each to G-code**;
   Standard quality meshes in 20–390 ms on a desktop JVM (expect several times slower on a phone).
 
+### Phase 3
+- **Runtime: llama.cpp** (MIT) through a small JNI bridge (`app/src/main/cpp/meshllm.cpp`). Built for arm64 with every CPU
+  variant (ARMv8.0 … ARMv9.2) and runtime selection, as in llama.cpp's official Android example. Source pinned to the
+  llama-cpp-python 0.3.36 sdist (SHA-256 checked) so the phone runs the same code as the desktop evaluation.
+- **Grammar-constrained decoding** (GBNF generated from the DSL spec): the model can only emit well-formed replies with real
+  template ids / node types / field names.
+- **Prefix caching:** the fixed instructions are processed once per model start and saved to disk; later requests only read
+  their own few dozen tokens.
+- **Two-stage agent** (`core/llm/ShapeAgent.kt`):
+  1. Plan: pick a template and fill in the values stated in the request (~50 tokens). Out-of-range values are clamped and the user is told.
+  2. Custom: only when no template fits, write a full recipe; validated, test-meshed, and corrected up to 3 times with the
+     problems fed back in plain words. Labelled "best effort" in the app.
+  - Edits ("make it taller") become parameter changes; structural changes ("add handles") rewrite the recipe.
+- **Models** (MODELS.md): Qwen3 1.7B (1.1 GB, default) and Qwen3 4B (2.5 GB, 8 GB+ phones), both Apache 2.0, pinned to
+  Hugging Face commits, SHA-256 verified after download. Models screen: size, license, progress, cancel, delete, choose;
+  downloads run in the background and resume after connection loss (Android DownloadManager); free-space check.
+- Free-memory check before starting a model; the model is released when the app goes to the background or memory runs low.
+- App: "Describe a shape" box in the Text → Shape gallery with live stage/time/cancel; "Change it with words" in the editor
+  with a summary of what changed.
+- 20 templates (added spacer/washer/ring and mounting plate; pen holder now any number of sides).
+- **Desktop evaluation** with the real models (tools/llm_eval + `LlmEval`), results in docs/LLM_EVAL.md.
+
 ## In progress
-- Nothing. Waiting for go-ahead on Phase 3.
+- Nothing. Waiting for go-ahead on Phase 4.
 
 ## Known issues
 - Release APK is signed with a public test key (see README → Release signing). Fine for testing, must be replaced before any public release.
@@ -79,6 +101,12 @@
 - `smooth_union` bulges slightly where two coplanar faces meet; templates trim it with an `intersect`.
 - Twisted/tapered extrusions have slightly thinner shells than the nominal thickness at strong twist.
 - Phone generation speed not yet measured on a real device.
+- **Free-form custom recipes are weak with small models**: they are valid and printable but often do not match the request
+  (e.g. a "star" cup came out hexagonal). Template-based requests are reliable. The 4B model helps somewhat.
+- The small model sometimes misreads which parameter a number belongs to (see docs/LLM_EVAL.md).
+- AI runs on the CPU only (no GPU/NPU yet). First request after starting the model reads the instructions (~1.8k tokens);
+  expect tens of seconds on mid-range phones, then a few seconds per template request.
+- Only 64-bit ARM phones are supported for the AI features (all phones with 6 GB+ RAM are).
 
 ## Decisions
 - **minSdk 29 (Android 10).** All 6 GB+ phones ship with 10+, and ARCore Depth / modern ML runtimes need recent APIs.
@@ -94,4 +122,7 @@
 - **Expressions instead of free code**: numbers can reference parameters, but there are no loops or variables beyond params.
 - **Marching cubes with generated table** rather than a hand-typed 256-row table (avoids transcription errors, guarantees manifold output).
 - **Live editing = Draft first, then refine** to the chosen quality after a short pause.
+- **Template-first AI** instead of free-form CSG: measured on real models, small LLMs pick templates and extract numbers
+  reliably but design geometry poorly. Custom recipes remain as a fallback.
+- **llama.cpp instead of MediaPipe**: MediaPipe LLM Inference is in maintenance mode and has no grammar-constrained decoding.
 - **Save to Downloads uses MediaStore** (no storage permission on Android 10+), into Downloads/MeshGen.

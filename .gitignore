@@ -11,3 +11,6 @@ build/
 *.keystore
 release.jks
 .kotlin/
+
+# Fetched by tools/fetch_llama_cpp.sh
+app/src/main/cpp/llama.cpp/

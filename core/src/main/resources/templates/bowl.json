@@ -14,7 +14,7 @@
   "shape": {
     "type": "shell", "thickness": "wall", "open_top": true,
     "child": {"type": "translate", "offset": [0, 0, "-(diameter/2 - sqrt(diameter^2/4 - (base*diameter/2)^2))"],
-      "comment": "sphere cut flat at the bottom (where its width equals the base) and at the top",
+      "comment": "sphere cut flat at the base and the top",
       "child": {"type": "intersect", "children": [
         {"type": "sphere", "radius": "diameter/2"},
         {"type": "translate", "offset": [0, 0, "diameter/2 - sqrt(diameter^2/4 - (base*diameter/2)^2)"],

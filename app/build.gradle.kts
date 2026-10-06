@@ -20,6 +20,31 @@ android {
         targetSdk = 35
         versionCode = buildNumber
         versionName = "0.0.$buildNumber"
+
+        ndk {
+            // All phones that can run the on-device models are 64-bit ARM.
+            abiFilters += listOf("arm64-v8a")
+        }
+        externalNativeBuild {
+            cmake {
+                arguments += listOf("-DCMAKE_BUILD_TYPE=Release", "-DANDROID_STL=c++_shared")
+            }
+        }
+    }
+
+    ndkVersion = "27.2.12479018"
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.31.6"
+        }
+    }
+
+    packaging {
+        jniLibs {
+            // llama.cpp picks the best CPU variant at runtime by loading .so files from disk.
+            useLegacyPackaging = true
+        }
     }
 
     signingConfigs {
@@ -65,6 +90,12 @@ android {
         buildConfig = true
     }
 }
+
+// Pinned llama.cpp source (see tools/fetch_llama_cpp.sh); skipped when already present.
+val fetchLlamaCpp by tasks.registering(Exec::class) {
+    commandLine("bash", rootProject.file("tools/fetch_llama_cpp.sh").absolutePath)
+}
+tasks.named("preBuild") { dependsOn(fetchLlamaCpp) }
 
 dependencies {
     implementation(project(":core"))

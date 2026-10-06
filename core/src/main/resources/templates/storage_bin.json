@@ -16,7 +16,7 @@
   "shape": {
     "type": "shell", "thickness": "wall", "open_top": true,
     "child": {"type": "translate", "offset": [0, 0, "corner"],
-      "comment": "offset rounds the corners and grows the size by 'corner' on every side",
+      "comment": "offset rounds corners, grows size by corner",
       "child": {"type": "offset", "distance": "corner",
         "child": {"type": "extrude", "height": "height - 2*corner", "taper": "flare",
           "points": [["-(length/2 - corner)", "-(width/2 - corner)"], ["length/2 - corner", "-(width/2 - corner)"],

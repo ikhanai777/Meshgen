@@ -16,7 +16,7 @@
   "shape": {
     "type": "subtract",
     "children": [
-      {"type": "intersect", "comment": "trim the fillet's side bulge to the exact width", "children": [
+      {"type": "intersect", "comment": "trim fillet bulge to exact width", "children": [
       {"type": "translate", "offset": [0, "reach/2", 0], "child": {"type": "box", "size": ["width", "2*reach + 2*thickness", "height + 1"]}},
       {"type": "smooth_union", "radius": 4, "children": [
         {"type": "box", "size": ["width", "thickness", "height"], "comment": "back plate"},

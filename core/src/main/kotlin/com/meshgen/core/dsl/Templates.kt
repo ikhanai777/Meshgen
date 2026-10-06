@@ -6,6 +6,7 @@ object Templates {
         "planter", "hex_pen_holder", "box_with_lid", "wall_hook", "phone_stand", "twisted_vase",
         "gear_ring", "cable_holder", "coaster", "bowl", "jewelry_tray", "storage_bin",
         "l_bracket", "knob", "soap_dish", "keychain_tag", "drawer_pull", "tealight_holder",
+        "spacer", "mounting_plate",
     )
 
     fun source(id: String): String =

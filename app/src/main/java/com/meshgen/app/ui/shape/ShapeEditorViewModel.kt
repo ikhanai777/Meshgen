@@ -4,7 +4,9 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.meshgen.app.MeshGenApp
 import com.meshgen.app.ui.viewer.MeshWorkbench
+import com.meshgen.core.llm.ShapeAgent
 import com.meshgen.core.dsl.Quality
 import com.meshgen.core.dsl.ShapeDoc
 import com.meshgen.core.dsl.ShapeEngine
@@ -33,6 +35,8 @@ data class EditorState(
     val lastMillis: Long? = null,
     val issues: List<String> = emptyList(),
     val showRecipe: Boolean = false,
+    /** Where this design came from (template, AI template fill, AI custom recipe). */
+    val sourceLabel: String? = null,
 )
 
 /**
@@ -40,17 +44,63 @@ data class EditorState(
  * once the sliders stop moving. Only the newest request runs; older ones are cancelled.
  */
 class ShapeEditorViewModel(app: Application, handle: SavedStateHandle) : AndroidViewModel(app) {
+    private val meshApp = app as MeshGenApp
     private val templateId: String = handle.get<String>("template") ?: Templates.IDS.first()
-    private val original: ShapeDoc = Templates.load(templateId)
+    private val pending = if (templateId == GENERATED) meshApp.pendingDesign else null
+    private var original: ShapeDoc = pending?.doc ?: Templates.load(templateId.takeIf { it in Templates.IDS } ?: Templates.IDS.first())
 
     val workbench = MeshWorkbench(app, viewModelScope, original.name)
-    private val _state = MutableStateFlow(EditorState(doc = original))
+    private val _state = MutableStateFlow(EditorState(doc = original, sourceLabel = pending?.sourceLabel ?: "Template"))
     val state: StateFlow<EditorState> = _state.asStateFlow()
+
+    val ai = AiTask(meshApp, viewModelScope)
+    val models = meshApp.models
 
     private var job: Job? = null
     private var firstMesh = true
 
-    init { regenerate(immediate = true) }
+    init {
+        regenerate(immediate = true)
+        pending?.notes?.forEach { workbench.message(it) }
+    }
+
+    /** Applies a change described in words: parameter edits when possible, otherwise a rewritten recipe. */
+    fun editWithWords(text: String, onApplied: () -> Unit) {
+        val doc = _state.value.doc ?: return
+        if (text.isBlank()) return
+        ai.run(
+            work = { agent, onEvent, cancelled -> agent.edit(doc, text, onEvent, cancelled) },
+            onDone = { r ->
+                val newDoc = r.doc
+                if (newDoc == null) {
+                    workbench.message(r.problems.firstOrNull()?.let { "Couldn't apply that change: $it" } ?: "Couldn't apply that change.")
+                } else {
+                    val summary = if (r.source == ShapeAgent.Source.CUSTOM) {
+                        _state.update { it.copy(sourceLabel = "Custom recipe rewritten by the AI (best effort)") }
+                        "Rewrote the recipe."
+                    } else {
+                        changes(doc, newDoc).ifEmpty { "No values changed." }
+                    }
+                    _state.update { it.copy(doc = newDoc) }
+                    regenerate(immediate = true)
+                    (listOf(summary) + r.notes).forEach { workbench.message(it) }
+                    onApplied()
+                }
+            },
+            onError = { workbench.message(it) },
+        )
+    }
+
+    private fun changes(old: ShapeDoc, new: ShapeDoc): String {
+        val before = old.values
+        return new.params.mapNotNull { p ->
+            val a = before[p.name] ?: return@mapNotNull null
+            if (kotlin.math.abs(a - p.value) < 1e-9) null
+            else "${p.label}: ${fmt(a)} → ${fmt(p.value)}${if (p.unit.isNotEmpty() && p.unit != "°") " " + p.unit else p.unit}"
+        }.joinToString(", ")
+    }
+
+    private fun fmt(v: Double) = if (v == Math.rint(v)) v.toLong().toString() else String.format(java.util.Locale.US, "%.1f", v)
 
     fun setParam(name: String, value: Double) {
         val doc = _state.value.doc ?: return
@@ -122,3 +172,5 @@ class ShapeEditorViewModel(app: Application, handle: SavedStateHandle) : Android
         }
     }
 }
+
+const val GENERATED = "__generated__"

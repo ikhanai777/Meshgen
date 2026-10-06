@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "name": "Mounting plate",
+  "description": "Flat plate with rounded corners and a screw hole in each corner. Also works as a sign or base.",
+  "prompt": "a 100 by 60 mm mounting plate with 4 screw holes",
+  "category": "Hardware",
+  "units": "mm",
+  "params": {
+    "length": {
+      "value": 100,
+      "min": 20,
+      "max": 300,
+      "step": 1,
+      "unit": "mm",
+      "label": "Length"
+    },
+    "width": {
+      "value": 60,
+      "min": 20,
+      "max": 300,
+      "step": 1,
+      "unit": "mm",
+      "label": "Width"
+    },
+    "thickness": {
+      "value": 4,
+      "min": 1.2,
+      "max": 20,
+      "step": 0.2,
+      "unit": "mm",
+      "label": "Thickness"
+    },
+    "corner": {
+      "value": 6,
+      "min": 0.5,
+      "max": 30,
+      "step": 0.5,
+      "unit": "mm",
+      "label": "Corner radius"
+    },
+    "hole": {
+      "value": 4.5,
+      "min": 2,
+      "max": 12,
+      "step": 0.1,
+      "unit": "mm",
+      "label": "Screw hole"
+    },
+    "inset": {
+      "value": 8,
+      "min": 4,
+      "max": 40,
+      "step": 0.5,
+      "unit": "mm",
+      "label": "Hole inset"
+    }
+  },
+  "shape": {
+    "type": "subtract",
+    "children": [
+      {
+        "type": "union",
+        "comment": "rounded rectangle",
+        "children": [
+          {
+            "type": "box",
+            "size": [
+              "length - 2*min(corner, length/2 - 0.5, width/2 - 0.5)",
+              "width",
+              "thickness"
+            ]
+          },
+          {
+            "type": "box",
+            "size": [
+              "length",
+              "width - 2*min(corner, length/2 - 0.5, width/2 - 0.5)",
+              "thickness"
+            ]
+          },
+          {
+            "type": "linear_array",
+            "count": 2,
+            "spacing": [
+              "length - 2*min(corner, length/2 - 0.5, width/2 - 0.5)",
+              0,
+              0
+            ],
+            "child": {
+              "type": "linear_array",
+              "count": 2,
+              "spacing": [
+                0,
+                "width - 2*min(corner, length/2 - 0.5, width/2 - 0.5)",
+                0
+              ],
+              "child": {
+                "type": "translate",
+                "offset": [
+                  "-length/2 + min(corner, length/2 - 0.5, width/2 - 0.5)",
+                  "-width/2 + min(corner, length/2 - 0.5, width/2 - 0.5)",
+                  0
+                ],
+                "child": {
+                  "type": "cylinder",
+                  "radius": "min(corner, length/2 - 0.5, width/2 - 0.5)",
+                  "height": "thickness"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "linear_array",
+        "count": 2,
+        "spacing": [
+          "length - 2*inset",
+          0,
+          0
+        ],
+        "comment": "corner holes",
+        "child": {
+          "type": "linear_array",
+          "count": 2,
+          "spacing": [
+            0,
+            "width - 2*inset",
+            0
+          ],
+          "child": {
+            "type": "translate",
+            "offset": [
+              "-length/2 + inset",
+              "-width/2 + inset",
+              -1
+            ],
+            "child": {
+              "type": "cylinder",
+              "radius": "hole/2",
+              "height": "thickness + 2"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

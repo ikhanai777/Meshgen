@@ -25,7 +25,7 @@
           {"type": "translate", "offset": [0, "-depth/2 + thickness/2", 0],
            "child": {"type": "box", "size": ["width", "thickness", "thickness + 10"], "comment": "front lip"}}
         ]},
-        {"type": "box", "size": ["width", "depth * 3", 400], "comment": "trim anything below the bed and the fillet side bulge"}
+        {"type": "box", "size": ["width", "depth * 3", 400], "comment": "trim below the bed and the fillet bulge"}
       ]},
       {"type": "translate", "offset": [0, "-depth/2", -1],
        "child": {"type": "box", "size": [14, "2*thickness + 2*ledge", 40], "comment": "cable slot"}}

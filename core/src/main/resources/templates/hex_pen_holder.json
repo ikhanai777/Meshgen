@@ -1,18 +1,19 @@
 {
   "version": 1,
-  "name": "Hexagonal pen holder",
-  "description": "Six-sided desk cup with an optional twist.",
-  "prompt": "a 10cm hexagonal pen holder with 3mm walls",
+  "name": "Pen holder",
+  "description": "Polygonal desk cup (hexagon by default; many sides look round) with an optional twist.",
+  "prompt": "an 8-sided pencil cup 12 cm tall",
   "category": "Desk",
   "units": "mm",
   "params": {
-    "width": {"value": 80, "min": 40, "max": 160, "step": 1, "unit": "mm", "label": "Width (corner to corner)"},
-    "height": {"value": 100, "min": 40, "max": 200, "step": 1, "unit": "mm", "label": "Height"},
+    "width": {"value": 80, "min": 30, "max": 200, "step": 1, "unit": "mm", "label": "Width (corner to corner)"},
+    "height": {"value": 100, "min": 30, "max": 250, "step": 1, "unit": "mm", "label": "Height"},
     "wall": {"value": 3, "min": 1.2, "max": 8, "step": 0.2, "unit": "mm", "label": "Wall thickness"},
-    "twist": {"value": 0, "min": -90, "max": 90, "step": 5, "unit": "°", "label": "Twist"}
+    "sides": {"value": 6, "min": 3, "max": 48, "step": 1, "label": "Sides", "integer": true},
+    "twist": {"value": 0, "min": -120, "max": 120, "step": 5, "unit": "°", "label": "Twist"}
   },
   "shape": {
     "type": "shell", "thickness": "wall", "open_top": true,
-    "child": {"type": "extrude", "sides": 6, "radius": "width/2", "height": "height", "twist": "twist"}
+    "child": {"type": "extrude", "height": "height", "sides": "sides", "radius": "width/2", "twist": "twist"}
   }
 }

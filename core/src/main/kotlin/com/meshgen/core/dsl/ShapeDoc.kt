@@ -40,6 +40,8 @@ class ShapeDoc(
 ) {
     val values: Map<String, Double> get() = params.associate { it.name to it.value }
 
+    fun renamed(newName: String) = ShapeDoc(newName, description, prompt, category, params, shape)
+
     fun withValues(values: Map<String, Double>) =
         ShapeDoc(name, description, prompt, category, params.map { p -> values[p.name]?.let { p.copy(value = p.clamp(it)) } ?: p }, shape)
 

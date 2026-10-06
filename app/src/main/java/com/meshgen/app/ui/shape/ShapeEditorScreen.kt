@@ -42,6 +42,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.meshgen.app.ui.theme.MeshColors
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import com.meshgen.app.ui.viewer.HealthRow
 import com.meshgen.app.ui.viewer.MeshPanelState
 import com.meshgen.app.ui.viewer.ViewerActions
@@ -62,11 +69,41 @@ fun ShapeEditorScreen(onBack: () -> Unit, vm: ShapeEditorViewModel = viewModel()
     val ed by vm.state.collectAsStateWithLifecycle()
     val snackbar = rememberViewerEvents(wb)
     val actions = remember(wb) { wb.actions(onBack) }
+    val states by vm.models.states.collectAsStateWithLifecycle()
+    val aiReady = remember(states) { vm.models.readyModel() != null }
+    val aiProgress by vm.ai.progress.collectAsStateWithLifecycle()
     ShapeEditorContent(
         panel, ed, actions, snackbar,
         viewport = { MeshViewport(panel, onError = wb::onRenderError) },
         onParam = vm::setParam, onReset = vm::resetParams, onQuality = vm::setQuality, onToggleRecipe = vm::toggleRecipe,
+        words = if (aiReady) ({ WordsCard(aiProgress, vm::editWithWords, vm.ai::cancel) }) else null,
     )
+}
+
+@Composable
+private fun WordsCard(progress: AiProgress?, onApply: (String, () -> Unit) -> Unit, onCancel: () -> Unit) {
+    var text by rememberSaveable { mutableStateOf("") }
+    Surface(shape = RoundedCornerShape(14.dp), color = MeshColors.Graphite900, border = BorderStroke(1.dp, MeshColors.AccentDim)) {
+        Column(Modifier.fillMaxWidth().padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it.take(200) },
+                    placeholder = { Text("Change it with words, e.g. “make it taller”", color = MeshColors.Graphite500, style = MaterialTheme.typography.bodySmall) },
+                    enabled = progress == null,
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f),
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MeshColors.Accent, unfocusedBorderColor = MeshColors.Graphite700),
+                )
+                Spacer(Modifier.width(6.dp))
+                IconButton(onClick = { onApply(text) { text = "" } }, enabled = progress == null && text.isNotBlank()) {
+                    Icon(Icons.Outlined.AutoAwesome, contentDescription = "Apply change", tint = if (text.isNotBlank()) MeshColors.Accent else MeshColors.Graphite500)
+                }
+            }
+            progress?.let { AiProgressRow(it, onCancel) }
+        }
+    }
 }
 
 /** Stateless editor layout (previewable without OpenGL or a ViewModel). */
@@ -81,6 +118,7 @@ fun ShapeEditorContent(
     onReset: () -> Unit,
     onQuality: (Quality) -> Unit,
     onToggleRecipe: () -> Unit,
+    words: (@Composable () -> Unit)? = null,
 ) {
     ViewerFrame(
         state = panel,
@@ -89,6 +127,10 @@ fun ShapeEditorContent(
         viewport = viewport,
         viewportOverlay = { GeneratingBadge(ed) },
     ) {
+        words?.invoke()
+        ed.sourceLabel?.takeIf { it != "Template" }?.let {
+            Text(it, style = MaterialTheme.typography.labelSmall, color = MeshColors.Graphite500, modifier = Modifier.padding(horizontal = 4.dp))
+        }
         if (ed.issues.isNotEmpty()) IssuesCard(ed.issues)
         ed.doc?.let { ParamsCard(it, onParam, onReset) }
         QualityRow(ed, onQuality)

@@ -29,6 +29,15 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Install NDK and CMake (on-device AI runtime)
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;27.2.12479018" "cmake;3.31.6" > /dev/null
+
+      - name: Cache llama.cpp source
+        uses: actions/cache@v4
+        with:
+          path: app/src/main/cpp/llama.cpp
+          key: llama-cpp-${{ hashFiles('tools/fetch_llama_cpp.sh') }}
+
       # Optional: a private release key stored in repo secrets (see README "Release signing").
       # Without it, release APKs are signed with the public test key in /signing.
       - name: Decode release keystore

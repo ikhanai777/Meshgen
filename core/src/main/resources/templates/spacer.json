@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "name": "Spacer / washer / ring",
+  "description": "Round disc or tube with a centre hole: spacers, washers, bushings, simple rings.",
+  "prompt": "a spacer 10 mm tall and 20 mm across with an 8 mm hole",
+  "category": "Hardware",
+  "units": "mm",
+  "params": {
+    "outer_diameter": {"value": 20, "min": 4, "max": 200, "step": 0.5, "unit": "mm", "label": "Outer diameter"},
+    "hole_diameter": {"value": 8, "min": 1, "max": 190, "step": 0.1, "unit": "mm", "label": "Hole diameter"},
+    "height": {"value": 10, "min": 0.8, "max": 150, "step": 0.2, "unit": "mm", "label": "Height"},
+    "chamfer": {"value": 0.6, "min": 0, "max": 5, "step": 0.1, "unit": "mm", "label": "Edge rounding"}
+  },
+  "shape": {
+    "type": "subtract",
+    "children": [
+      {"type": "cylinder", "radius": "outer_diameter/2", "height": "height",
+       "round": "min(chamfer, height/2 - 0.2, (outer_diameter - hole_diameter)/4 - 0.1)"},
+      {"type": "translate", "offset": [0, 0, -1],
+       "child": {"type": "cylinder", "radius": "min(hole_diameter, outer_diameter - 1.6)/2", "height": "height + 2"}}
+    ]
+  }
+}

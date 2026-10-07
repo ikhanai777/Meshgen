@@ -30,4 +30,11 @@ add_subdirectory(${LLAMA_SRC} build-llama)
 
 add_library(meshllm SHARED meshllm.cpp)
 target_include_directories(meshllm PRIVATE ${LLAMA_SRC}/include ${LLAMA_SRC}/ggml/include)
-target_link_libraries(meshllm llama ggml android log)
+if (ANDROID)
+    target_link_libraries(meshllm llama ggml android log)
+else()
+    # Desktop build for testing the JNI bridge on a PC (tools/jni_test).
+    find_package(JNI REQUIRED)
+    target_include_directories(meshllm PRIVATE ${JNI_INCLUDE_DIRS})
+    target_link_libraries(meshllm llama ggml)
+endif()

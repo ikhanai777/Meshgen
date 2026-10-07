@@ -2,7 +2,7 @@
 // One Engine = one loaded model + context. The system prompt ("prefix") stays in the KV cache between
 // requests (and is saved to disk), so each request only processes its own short suffix.
 #include <jni.h>
-#include <android/log.h>
+#include <cstdio>
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -10,8 +10,14 @@
 #include "ggml-backend.h"
 
 #define TAG "meshllm"
+#ifdef __ANDROID__
+#include <android/log.h>
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
+#else  // desktop test build
+#define LOGI(...) (fprintf(stderr, __VA_ARGS__), fputc('\n', stderr))
+#define LOGE(...) (fprintf(stderr, __VA_ARGS__), fputc('\n', stderr))
+#endif
 
 namespace {
 

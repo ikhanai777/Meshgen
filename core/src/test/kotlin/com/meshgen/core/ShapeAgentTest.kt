@@ -9,6 +9,7 @@ import com.meshgen.core.llm.PlanGrammar
 import com.meshgen.core.llm.PlanPrompt
 import com.meshgen.core.llm.ShapeAgent
 import com.meshgen.core.llm.ShapePrompt
+import com.meshgen.core.llm.StatedSizes
 import com.meshgen.core.llm.TextGenerator
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -48,6 +49,37 @@ class ShapeAgentTest {
         assertEquals(3.0, r.doc!!.values["wall"]!!, 0.0)
         assertTrue(llm.suffixes[0].contains("Request: a 10cm hexagonal pen holder with 3mm walls"))
         assertTrue(r.notes.isEmpty())
+    }
+
+    @Test
+    fun `stated sizes are read with units and dimension groups`() {
+        assertEquals(listOf(100.0, 3.0), StatedSizes.millimetres("a 10cm hexagonal pen holder with 3mm walls"))
+        assertEquals(listOf(60.0, 40.0, 30.0, 2.0), StatedSizes.millimetres("a box 60 x 40 x 30 mm with 2 mm walls"))
+        assertEquals(listOf(50.8), StatedSizes.millimetres("a 2 inch cube"))
+        assertEquals(listOf(150.0), StatedSizes.millimetres("planter 15 cm wide for 3 plants"))
+        assertEquals(listOf(4.5), StatedSizes.millimetres("holes of 4,5 mm"))
+        assertTrue(StatedSizes.millimetres("a hook for 5 keys").isEmpty())
+    }
+
+    @Test
+    fun `invented sizes go back to defaults`() {
+        val llm = Scripted("""{"template":"hex_pen_holder","name":"Pen holder","params":{"width":200,"height":100,"wall":3,"sides":6}}""")
+        val r = ShapeAgent(llm).create("a 10cm hexagonal pen holder with 3mm walls")
+        assertEquals("width was never stated", 80.0, r.doc!!.values["width"]!!, 0.0)
+        assertEquals(100.0, r.doc!!.values["height"]!!, 0.0)
+        assertEquals(6.0, r.doc!!.values["sides"]!!, 0.0)
+        assertEquals(1, llm.suffixes.size)
+    }
+
+    @Test
+    fun `an unused stated size triggers one follow-up question`() {
+        val llm = Scripted(
+            """{"template":"knob","name":"Knob","params":{"shaft":6}}""",
+            """{"template":"knob","name":"Knob","params":{"shaft":6,"diameter":40}}""",
+        )
+        val r = ShapeAgent(llm).create("a knob for a 6 mm shaft, 40 mm wide")
+        assertEquals(40.0, r.doc!!.values["diameter"]!!, 0.0)
+        assertTrue(llm.suffixes[1].contains("You did not use these sizes from the request: 40 mm."))
     }
 
     @Test

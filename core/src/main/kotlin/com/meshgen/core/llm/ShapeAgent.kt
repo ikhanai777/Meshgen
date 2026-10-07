@@ -61,14 +61,34 @@ class ShapeAgent(
 
     fun create(request: String, onEvent: (Event) -> Unit = {}, isCancelled: () -> Boolean = { false }): Result {
         val raws = mutableListOf<String>()
+        val stated = StatedSizes.millimetres(request)
         onEvent(Event.Planning)
-        val planText = ask(PlanPrompt.SYSTEM, listOf(PlanPrompt.create(request)), PlanGrammar.CREATE, 200, 0.1f, onEvent, isCancelled)
+        val conversation = mutableListOf(PlanPrompt.create(request))
+        var planText = ask(PlanPrompt.SYSTEM, conversation, PlanGrammar.CREATE, 200, 0.1f, onEvent, isCancelled)
         raws += planText
-        val plan = parse(planText)
+        var plan = parse(planText)
         val id = (plan?.get("template") as? JsonPrimitive)?.content
         if (id != null && id != PlanPrompt.CUSTOM && id in Templates.IDS) {
             val template = Templates.load(id)
-            val (values, notes) = values(template, plan["params"] as? JsonObject)
+            var raw = rawValues(template, plan!!["params"] as? JsonObject, stated)
+            // A size from the request that no parameter uses: ask once where it belongs.
+            val unused = StatedSizes.unused(template.params, raw, stated)
+            if (unused.isNotEmpty()) {
+                conversation += ChatMessage(ChatMessage.Role.ASSISTANT, planText)
+                conversation += ChatMessage(
+                    ChatMessage.Role.USER,
+                    "You did not use these sizes from the request: ${unused.joinToString { PlanPrompt.fmt(it) + " mm" }}. " +
+                        "Put each one into the parameter it describes and reply with the full JSON again.",
+                )
+                planText = ask(PlanPrompt.SYSTEM, conversation, PlanGrammar.CREATE, 200, 0.1f, onEvent, isCancelled)
+                raws += planText
+                val retry = parse(planText)
+                if ((retry?.get("template") as? JsonPrimitive)?.content == id) {
+                    plan = retry
+                    raw = rawValues(template, retry!!["params"] as? JsonObject, stated)
+                }
+            }
+            val (values, notes) = clamp(template, raw)
             val name = (plan["name"] as? JsonPrimitive)?.content?.trim()?.takeIf { it.isNotEmpty() } ?: template.name
             val doc = template.withValues(values).renamed(name)
             val problems = check(doc)
@@ -78,6 +98,14 @@ class ShapeAgent(
         return writeRecipe(listOf(ShapePrompt.create(request)), raws, onEvent, isCancelled)
     }
 
+    /** The model's numbers for [doc]'s parameters; millimetre sizes nobody stated are dropped (they keep defaults). */
+    private fun rawValues(doc: ShapeDoc, params: JsonObject?, stated: List<Double>): Map<String, Double> {
+        if (params == null) return emptyMap()
+        val raw = doc.params.mapNotNull { p -> (params[p.name] as? JsonPrimitive)?.doubleOrNull?.let { p.name to it } }.toMap()
+        val invented = StatedSizes.invented(doc.params, raw, stated).toSet()
+        return raw - invented
+    }
+
     fun edit(current: ShapeDoc, request: String, onEvent: (Event) -> Unit = {}, isCancelled: () -> Boolean = { false }): Result {
         val raws = mutableListOf<String>()
         onEvent(Event.Planning)
@@ -85,7 +113,10 @@ class ShapeAgent(
         raws += text
         val plan = parse(text)
         if ((plan?.get("template") as? JsonPrimitive)?.content == PlanPrompt.CURRENT) {
-            val (values, notes) = values(current, plan["params"] as? JsonObject)
+            val raw = (plan["params"] as? JsonObject)?.let { ps ->
+                current.params.mapNotNull { p -> (ps[p.name] as? JsonPrimitive)?.doubleOrNull?.let { p.name to it } }.toMap()
+            } ?: emptyMap()
+            val (values, notes) = clamp(current, raw.filter { (k, v) -> current.values[k] != v })
             val doc = current.withValues(values)
             if (values.isEmpty()) {
                 return Result(null, Source.PARAMS, null, 1, emptyList(), listOf("The model did not change anything. Try describing the change differently."), raws)
@@ -138,15 +169,15 @@ class ShapeAgent(
 
     private fun parse(text: String): JsonObject? = runCatching { Json.parseToJsonElement(text) as? JsonObject }.getOrNull()
 
-    /** Values from the model, clamped to each parameter's range. Notes describe any clamping. */
-    private fun values(doc: ShapeDoc, params: JsonObject?): Pair<Map<String, Double>, List<String>> {
-        if (params == null) return emptyMap<String, Double>() to emptyList()
+    /** Values clamped to each parameter's range. Notes describe any clamping. */
+    private fun clamp(doc: ShapeDoc, raw: Map<String, Double>): Pair<Map<String, Double>, List<String>> {
         val values = mutableMapOf<String, Double>()
         val notes = mutableListOf<String>()
         for (p in doc.params) {
-            val v = (params[p.name] as? JsonPrimitive)?.doubleOrNull ?: continue
+            val v = raw[p.name] ?: continue
             val c = p.clamp(v)
-            if (kotlin.math.abs(c - v) > 1e-9 && !(p.integer && kotlin.math.abs(Math.round(v) - v) < 1e-9 && c == Math.round(v).toDouble())) {
+            val roundedInteger = p.integer && c == Math.round(v).toDouble() && c in p.min..p.max
+            if (kotlin.math.abs(c - v) > 1e-9 && !roundedInteger) {
                 notes += "${p.label} ${PlanPrompt.fmt(v)}${unit(p.unit)} is outside this design's range, so it was set to ${PlanPrompt.fmt(c)}${unit(p.unit)}."
             }
             values[p.name] = c

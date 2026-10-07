@@ -18,3 +18,10 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     testImplementation(libs.junit)
 }
+
+// The model evaluation (LlmEval) depends on which model server it talks to; never reuse a cached result for another setup.
+tasks.test {
+    inputs.property("llmUrl", System.getenv("MESHGEN_LLM_URL") ?: "")
+    inputs.property("llmLabel", System.getenv("MESHGEN_LLM_LABEL") ?: "")
+    if (System.getenv("MESHGEN_LLM_URL") != null) outputs.upToDateWhen { false }
+}

@@ -83,7 +83,14 @@
 - App: "Describe a shape" box in the Text → Shape gallery with live stage/time/cancel; "Change it with words" in the editor
   with a summary of what changed.
 - 20 templates (added spacer/washer/ring and mounting plate; pen holder now any number of sides).
-- **Desktop evaluation** with the real models (tools/llm_eval + `LlmEval`), results in docs/LLM_EVAL.md.
+- **Size checks in code**: sizes the request never stated are reset to template defaults; a stated size that no parameter
+  uses triggers one follow-up question to the model.
+- **Desktop evaluation** with the real models (tools/llm_eval + `LlmEval`), results in docs/LLM_EVAL.md:
+  both models 17/17 watertight; 9/14 new designs fully match the request (4 partly, 1 wrong); 3/3 edits correct.
+  Acceptance prompt "a 10cm hexagonal pen holder with 3mm walls" → 6-sided holder, 100 mm tall, 3 mm walls.
+- **JNI bridge tested on desktop** with the real model (tools/jni_test): generation, prefix reuse in memory and from
+  storage, cancel, error on a damaged/missing model.
+- 21 templates (+ ball). 59 core tests.
 
 ## In progress
 - Nothing. Waiting for go-ahead on Phase 4.

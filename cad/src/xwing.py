@@ -8,7 +8,7 @@ from a dimensioned drawing.
 from __future__ import annotations
 
 from cadgen import build123d as bd
-from cadgen import glb, srgb, step
+from cadgen import glb, srgb, step, stl
 
 # Fuselage cross-sections: (x, width, height, center z)
 FUSELAGE_SECTIONS = [
@@ -187,6 +187,7 @@ def _labeled(shape: bd.Shape, label: str, color: bd.Color) -> bd.Shape:
 
 @step(out="../STEP/xwing.step")
 @glb(out="../GLB/xwing.glb")
+@stl(out="../STL/xwing.stl")
 def xwing():
     children = [
         _labeled(fuselage(), "fuselage", HULL),

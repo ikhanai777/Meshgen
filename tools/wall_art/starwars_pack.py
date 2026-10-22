@@ -1,6 +1,6 @@
 # Star Wars fan-art pack (personal use): 50 sturdy one-piece line cutouts with a keyhole tab.
-# Sturdier than cutouts.py: 5 mm thick, every line widened by 0.8 mm, wider bridges, a deeper keyhole cap, and
-# ships drawn small inside a scene are filled silhouettes rather than thin outlines.
+# 3 mm thick; sturdier line work than cutouts.py: every line widened by 0.8 mm, wider bridges, a bigger keyhole
+# tab, and ships drawn small inside a scene are filled silhouettes rather than thin outlines.
 # Usage: python tools/wall_art/starwars_pack.py OUT_DIR [design ...]
 import sys, os, json, math, numpy as np
 from shapely.geometry import Polygon, box
@@ -11,7 +11,7 @@ import cutouts
 from cutouts import O, W, R, frame, inside, build
 from starwars import x_wing_icon, tie_fighter, falcon_icon, destroyer_icon, walker_icon, astromech, t_visor_helmet
 
-cutouts.T, cutouts.THICKEN, cutouts.KEY_DEPTH, cutouts.TAB_R, cutouts.BRIDGE = 5.0, 0.4, 1.6, 13, 3.4
+cutouts.T, cutouts.THICKEN, cutouts.KEY_DEPTH, cutouts.TAB_R, cutouts.BRIDGE = 3.0, 0.4, 1.0, 13, 3.4
 
 P = place
 def sil(g):  # filled silhouette: sturdy at small scale

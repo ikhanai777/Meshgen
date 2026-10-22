@@ -59,10 +59,10 @@ def leaf(length, width, bend=0.0):
     xc = bend * length * np.sin(math.pi * t) * 0.15
     return Polygon(list(zip(xc + half, yy)) + list(zip(xc - half, yy))[::-1]).buffer(0)
 
-def maple(x, y, s, rot=0):
+def maple(x, y, s, rot=0, w=0.3):
     th = np.linspace(0, 2 * math.pi, 400)
     peaks = [(90, .62), (40, .55), (140, .55), (-15, .36), (195, .36)]
-    r = 0.34 + sum(a * np.exp(-((((th - math.radians(p)) + math.pi) % (2*math.pi) - math.pi) / 0.3)**2) for p, a in peaks)
+    r = 0.34 + sum(a * np.exp(-((((th - math.radians(p)) + math.pi) % (2*math.pi) - math.pi) / w)**2) for p, a in peaks)
     r += 0.05 * np.abs(np.sin(9 * th))
     g = U(Polygon(np.c_[r * np.cos(th), r * np.sin(th)]).buffer(0), stroke([(0, 0), (0.05, -0.55)], 0.07))
     return place(g, x, y, s, rot)
@@ -222,7 +222,9 @@ SCENES = {f.__name__.replace("_", "-"): f for f in (autumn, galaxy, twin_suns, f
 def clean(g):
     g = g.buffer(-MIN_FEATURE / 2, quad_segs=8).buffer(MIN_FEATURE / 2, quad_segs=8)
     polys = [p for p in getattr(g, "geoms", [g]) if p.geom_type == "Polygon" and p.area > 2.0]
-    return [p.simplify(0.03) for p in polys]
+    # Holes under 1 mm2 can't print and their near-zero edges upset the sketch's profile finder.
+    polys = [Polygon(p.exterior, [h for h in p.interiors if Polygon(h).area > 1.0]).simplify(0.03) for p in polys]
+    return [q for p in polys for q in getattr(p.buffer(0), "geoms", [p.buffer(0)]) if q.area > 2.0]
 
 def ring_pts(coords):
     pts = []

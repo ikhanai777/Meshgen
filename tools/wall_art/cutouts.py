@@ -278,8 +278,8 @@ def tab_centre(g):
     cx = min(xs, key=abs) if xs else (minx + maxx) / 2
     return cx, maxy - 9
 
-def build_script(name):
-    art = DESIGNS[name]()
+def build_script(name, designs=None):
+    art = (designs or DESIGNS)[name]()
     cx, cy = tab_centre(art)
     art = connect(U(art, circ(cx, cy, 12)).buffer(0))
     polys = clean(art)
@@ -296,8 +296,8 @@ def build_script(name):
 
 def run(args): return subprocess.run(["solidcraft-cli"] + args, check=True, capture_output=True, text=True)
 
-def build(name, out):
-    cmds, poly = build_script(name)
+def build(name, out, designs=None):
+    cmds, poly = build_script(name, designs)
     path = os.path.join(out, f"{name}.script.json")
     json.dump({"commands": cmds}, open(path, "w"))
     run(["run", path, "--quiet", "--out", os.path.join(out, f"{name}.stl"), "--save", os.path.join(out, f"{name}.solidcraft")])

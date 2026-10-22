@@ -10,7 +10,7 @@ from cutouts import O, W, R, frame, inside, build
 def stars_around(rng, n, avoid, r=80):
     return [sparkle(x, y, rng.uniform(3.5, 6)) for x, y in scatter(rng, n, circ(0, 0, r), 7, avoid.buffer(8))]
 
-def x_wing():
+def x_wing_icon():
     # Front view, S-foils open in attack position.
     parts = []
     for ang in (14, 166, 194, 346):
@@ -19,7 +19,10 @@ def x_wing():
                         (d[0] * 74 - n[0] * 3.5, d[1] * 74 - n[1] * 3.5), (d[0] * 8 - n[0] * 6, d[1] * 8 - n[1] * 6)])
         parts += [O(wing), ring(d[0] * 26, d[1] * 26, 8, 8, W), circ(d[0] * 26, d[1] * 26, 3), ring(d[0] * 78, d[1] * 78, 4, 4, 2.2)]
     body = U(ring(0, 0, 13, 13, 3.0), O(rrect(-6, -24, 6, -11, 2)), O(rrect(-8, 9, 8, 22, 3)))
-    g = U(parts, body)
+    return U(parts, body)
+
+def x_wing():
+    g = x_wing_icon()
     return U(frame(), g, stars_around(np.random.default_rng(1), 10, g))
 
 def tie_fighter():
@@ -35,7 +38,7 @@ def tie_fighter():
     ball = U(ring(0, 0, 22, 22, 3.2), ring(0, 0, 12, 12, 2.4), [stroke([(12 * math.cos(a), 12 * math.sin(a)), (22 * math.cos(a), 22 * math.sin(a))], 2.0) for a in np.linspace(0, 2 * math.pi, 9)[:-1]])
     return U(parts, ball, circ(0, 0, 4))
 
-def millennium_falcon():
+def falcon_icon():
     disc = circ(0, -8, 60)
     mandibles = U(box(-24, 20, -5, 74), box(5, 20, 24, 74))
     cockpit_arm = Polygon([(40, 30), (66, 52), (74, 44), (52, 20)])
@@ -44,19 +47,25 @@ def millennium_falcon():
                stroke([(-14, 74), (-14, 40)], 2.0), stroke([(14, 74), (14, 40)], 2.0), ring(70, 48, 4, 4, 2.0),
                O(rrect(-40, -66, 40, -56, 4), 2.0)]
     details += [stroke([(18 * math.cos(a), -8 + 18 * math.sin(a)), (40 * math.cos(a), -8 + 40 * math.sin(a))], 2.0) for a in np.radians((20, 160, 200, 240, 300, 340))]
-    g = U(O(hull, 3.2), [d.intersection(hull) for d in details])
+    return U(O(hull, 3.2), [d.intersection(hull) for d in details])
+
+def millennium_falcon():
+    g = falcon_icon()
     return U(frame(), g, stars_around(np.random.default_rng(3), 8, g))
 
-def star_destroyer():
+def destroyer_icon():
     hull = Polygon([(-82, 6), (56, 40), (66, 30), (66, -24), (56, -32)])
     tower = U(rrect(30, 34, 58, 44, 2), rrect(38, 44, 52, 52, 2), box(44, 52, 46, 58), circ(40, 56, 2.6), circ(50, 56, 2.6))
     lines = [stroke([(-82, 6), (66, 4)], 2.2), stroke([(-40, 15), (56, 32)], 2.0), stroke([(-40, -3), (56, -22)], 2.0)]
     engines = [ring(70, y, 4, 4, 2.0) for y in (16, 2, -12)]
+    return U(O(U(hull, tower), 3.0), [l.intersection(hull) for l in lines], engines)
+
+def star_destroyer():
+    g = destroyer_icon()
     planet = ring(-30, -150, 110, 110, 3.0)
-    g = U(O(U(hull, tower), 3.0), [l.intersection(hull) for l in lines], engines)
     return U(frame(), inside(U(g, planet)), stars_around(np.random.default_rng(4), 8, U(g, circ(-30, -150, 112))))
 
-def at_at():
+def walker_icon():
     body = rrect(-42, 14, 34, 42, 8)
     head = U(rrect(48, 16, 72, 32, 4), box(72, 18, 78, 22))
     neck = stroke([(34, 28), (48, 25)], 8)
@@ -65,7 +74,10 @@ def at_at():
         knee = (hip_x + knee_dx, -12); foot = (hip_x, -46)
         legs += [stroke([(hip_x, 16), knee], 6), stroke([knee, foot], 5), ring(*knee, 5, 5, 2.2), rrect(foot[0] - 8, -52, foot[0] + 8, -46, 2)]
     details = [stroke([(-42, 30), (34, 30)], 2.0).intersection(body), circ(62, 25, 2.6)]
-    walker = U(O(U(body, head, neck), 3.0), legs, details, box(-62, -54, 62, -51))
+    return U(O(U(body, head, neck), 3.0), legs, details)
+
+def at_at():
+    walker = U(walker_icon(), box(-62, -54, 62, -51))
     peaks = stroke([(-92, -10), (-70, 22), (-56, 6), (-40, 50), (-30, 46)], 2.4)
     snow = [stroke(fn_curve(lambda x, o=o: o + 2 * math.sin(x / 9 + o), -90, 90), 2.2) for o in (-64, -74)]
     return U(frame(), inside(U(walker, peaks, snow)))

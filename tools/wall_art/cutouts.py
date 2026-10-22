@@ -11,7 +11,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from wall_art import U, place, circ, ell, ring, stroke, rrect, bez, fn_curve, star, sparkle, heart, leaf, maple, scatter, clean, sketch_cmds
 
 T = 4.0           # thickness
+THICKEN = 0.0     # widen every line by 2x this after drawing (sturdier packs)
+KEY_DEPTH = 1.4   # keyhole: narrow slot depth, then the wide channel above it; the rest of T is the cap
+TAB_R = 12
 W = 2.6           # default line width (about 6 extrusion widths)
+BRIDGE = W
 R = 92            # radius of the round frames
 COLOUR = "#c9b3f2"
 
@@ -281,14 +285,15 @@ def tab_centre(g):
 def build_script(name, designs=None):
     art = (designs or DESIGNS)[name]()
     cx, cy = tab_centre(art)
-    art = connect(U(art, circ(cx, cy, 12)).buffer(0))
+    if THICKEN: art = art.buffer(THICKEN, quad_segs=8)
+    art = connect(U(art, circ(cx, cy, TAB_R)).buffer(0), BRIDGE)
     polys = clean(art)
     assert len(polys) == 1, f"{name}: {len(polys)} pieces"
     cmds, picks = sketch_cmds(polys, 0, "Line art")
     cmds.append({"command": "solid.extrude", "params": {"distance": T, "profiles": picks, "operation": "new", "body_name": "Art"}})
     # Keyhole on the back: head enters the round hole and slides up into the wide channel; 1.2 mm cap on top.
-    for g, z0, h in ((U(circ(cx, cy - 3.5, 4.4), stroke([(cx, cy - 3.5), (cx, cy + 3.5)], 8.8)), 1.4, 1.4),
-                     (U(circ(cx, cy - 3.5, 4.4), stroke([(cx, cy - 3.5), (cx, cy + 3.5)], 4.4)), 0, 1.4)):
+    for g, z0, h in ((U(circ(cx, cy - 3.5, 4.4), stroke([(cx, cy - 3.5), (cx, cy + 3.5)], 8.8)), KEY_DEPTH, KEY_DEPTH),
+                     (U(circ(cx, cy - 3.5, 4.4), stroke([(cx, cy - 3.5), (cx, cy + 3.5)], 4.4)), 0, KEY_DEPTH)):
         c, p = sketch_cmds([g], 0, "Keyhole")
         cmds += c + [{"command": "solid.extrude", "params": {"distance": h, "start_offset": z0, "profiles": p, "operation": "cut", "targets": ["Art"]}}]
     cmds.append({"command": "appearance.assign", "params": {"bodies": ["Art"], "color": COLOUR}})
